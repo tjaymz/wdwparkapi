@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney Park API Parser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .config-section {
+            background: #f7f9fc;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .config-section h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .api-input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .api-input-group button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .api-input-group button:hover {
+            background: #5568d3;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .park-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .park-info p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .schedule-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-card .date {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .schedule-card .time-slot {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .schedule-card .time-slot:last-child {
+            margin-bottom: 0;
+        }
+
+        .attractions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .attraction-card {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .attraction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .attraction-card h3 {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .attraction-card .location {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .attraction-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #e8eaf6;
+            color: #5c6bc0;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #667eea;
+            font-size: 1.3em;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #c33;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Disney Park API Parser</h1>
+            <p>View and analyze park data from Disney World</p>
+        </div>
+
+        <div class="config-section">
+            <h3>API Configuration</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                Currently using local file. Enter an API URL below to fetch data from an external source.
+            </p>
+            <div class="api-input-group">
+                <input
+                    type="text"
+                    id="apiUrl"
+                    placeholder="Enter API URL (or leave empty to use parkAPI.json)"
+                    value=""
+                />
+                <button onclick="loadData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="loading" class="loading">
+                Loading park data...
+            </div>
+            <div id="error" style="display: none;"></div>
+            <div id="data-container" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Easy to change the data source
+        const DEFAULT_DATA_SOURCE = 'parkAPI.json';
+
+        let parkData = null;
+
+        // Load data when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+
+        async function loadData() {
+            const apiUrlInput = document.getElementById('apiUrl');
+            const dataSource = apiUrlInput.value.trim() || DEFAULT_DATA_SOURCE;
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(dataSource);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                parkData = await response.json();
+                renderData(parkData);
+                showLoading(false);
+            } catch (error) {
+                showError(`Failed to load data: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('data-container').style.display = show ? 'none' : 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function renderData(data) {
+            const container = document.getElementById('data-container');
+
+            let html = '';
+
+            // Statistics
+            const attractionCount = data.mapData?.location?.markers?.length || 0;
+            const scheduleCount = data.infoBarData?.schedule?.schedules?.length || 0;
+
+            html += '<div class="stats">';
+            html += `
+                <div class="stat-card">
+                    <div class="number">${attractionCount}</div>
+                    <div class="label">Attractions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">${scheduleCount}</div>
+                    <div class="label">Schedule Entries</div>
+                </div>
+            `;
+            html += '</div>';
+
+            // Park Information
+            if (data.meta || data.headerData) {
+                html += '<div class="section">';
+                html += '<h2>Park Information</h2>';
+                html += '<div class="park-info">';
+
+                if (data.headerData?.title) {
+                    html += `<h3 style="color: #2c3e50; margin-bottom: 10px;">${data.headerData.title}</h3>`;
+                }
+
+                if (data.headerData?.subtitle) {
+                    html += `<p><strong>Subtitle:</strong> ${data.headerData.subtitle}</p>`;
+                }
+
+                if (data.meta?.description) {
+                    html += `<p><strong>Description:</strong> ${data.meta.description}</p>`;
+                }
+
+                html += '</div></div>';
+            }
+
+            // Today's Schedule
+            if (data.infoBarData?.schedule?.schedules) {
+                html += '<div class="section">';
+                html += '<h2>Park Schedule (Next 7 Days)</h2>';
+                html += '<div class="schedule-grid">';
+
+                const schedules = data.infoBarData.schedule.schedules;
+                const uniqueDates = [...new Set(schedules.map(s => s.date))].slice(0, 7);
+
+                uniqueDates.forEach(date => {
+                    const daySchedules = schedules.filter(s => s.date === date);
+
+                    html += '<div class="schedule-card">';
+                    html += `<div class="date">${formatDate(date)}</div>`;
+
+                    daySchedules.forEach(schedule => {
+                        html += `
+                            <div class="time-slot">
+                                <strong>${schedule.type}</strong><br>
+                                ${formatTime(schedule.startTime)} - ${formatTime(schedule.endTime)}
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                });
+
+                html += '</div></div>';
+            }
+
+            // Attractions
+            if (data.mapData?.location?.markers) {
+                html += '<div class="section">';
+                html += '<h2>Attractions</h2>';
+                html += '<div class="attractions-grid">';
+
+                data.mapData.location.markers.forEach(marker => {
+                    if (marker.card) {
+                        html += '<div class="attraction-card">';
+                        html += `<h3>${marker.card.name || marker.name}</h3>`;
+
+                        // Location
+                        if (marker.facets && marker.facets[2]) {
+                            html += `<div class="location">${marker.facets[2][1] || ''}</div>`;
+                        }
+
+                        // Tags
+                        if (marker.facets) {
+                            html += '<div class="tags">';
+
+                            // Height requirement
+                            if (marker.facets[0] && marker.facets[0][0]) {
+                                html += `<span class="tag">${marker.facets[0][0]}</span>`;
+                            }
+
+                            // Ride types
+                            if (marker.facets[1]) {
+                                marker.facets[1].forEach(tag => {
+                                    html += `<span class="tag">${tag}</span>`;
+                                });
+                            }
+
+                            html += '</div>';
+                        }
+
+                        html += '</div>';
+                    }
+                });
+
+                html += '</div></div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+    </script>
+</body>
+</html>
