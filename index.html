@@ -418,9 +418,9 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('preview')">Preview</button>
-            <button class="tab" onclick="switchTab('explorer')">Data Explorer</button>
-            <button class="tab" onclick="switchTab('raw')">Raw JSON</button>
+            <button class="tab active" onclick="switchTab(this, 'preview')">Preview</button>
+            <button class="tab" onclick="switchTab(this, 'explorer')">Data Explorer</button>
+            <button class="tab" onclick="switchTab(this, 'raw')">Raw JSON</button>
         </div>
 
         <div class="content">
@@ -484,10 +484,10 @@
             document.getElementById('error').style.display = 'none';
         }
 
-        function switchTab(tabName) {
+        function switchTab(element, tabName) {
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            element.classList.add('active');
 
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
