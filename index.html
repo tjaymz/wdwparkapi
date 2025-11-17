@@ -429,7 +429,7 @@
             </div>
             <div id="error" style="display: none;"></div>
 
-            <div id="preview-tab" class="tab-content active" style="display: none;"></div>
+            <div id="preview-tab" class="tab-content active"></div>
             <div id="explorer-tab" class="tab-content"></div>
             <div id="raw-tab" class="tab-content"></div>
         </div>
@@ -470,8 +470,16 @@
         }
 
         function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('preview-tab').style.display = show ? 'none' : 'block';
+            const loading = document.getElementById('loading');
+            const allTabs = document.querySelectorAll('.tab-content');
+
+            if (show) {
+                loading.style.display = 'block';
+                allTabs.forEach(tab => tab.style.visibility = 'hidden');
+            } else {
+                loading.style.display = 'none';
+                allTabs.forEach(tab => tab.style.visibility = 'visible');
+            }
         }
 
         function showError(message) {
