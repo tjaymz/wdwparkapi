@@ -450,36 +450,32 @@
             const apiUrlInput = document.getElementById('apiUrl');
             const dataSource = apiUrlInput.value.trim() || DEFAULT_DATA_SOURCE;
 
+            console.log('Loading data from:', dataSource);
             showLoading(true);
             hideError();
 
             try {
                 const response = await fetch(dataSource);
+                console.log('Fetch response:', response);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 parkData = await response.json();
+                console.log('Data loaded successfully:', parkData);
                 renderAllViews(parkData);
                 showLoading(false);
             } catch (error) {
-                showError(`Failed to load data: ${error.message}`);
+                console.error('Error loading data:', error);
+                showError(`Failed to load data: ${error.message}. If viewing locally, you may need to serve this file via a web server (e.g., python -m http.server or using Live Server extension).`);
                 showLoading(false);
             }
         }
 
         function showLoading(show) {
             const loading = document.getElementById('loading');
-            const allTabs = document.querySelectorAll('.tab-content');
-
-            if (show) {
-                loading.style.display = 'block';
-                allTabs.forEach(tab => tab.style.visibility = 'hidden');
-            } else {
-                loading.style.display = 'none';
-                allTabs.forEach(tab => tab.style.visibility = 'visible');
-            }
+            loading.style.display = show ? 'block' : 'none';
         }
 
         function showError(message) {
@@ -493,13 +489,21 @@
         }
 
         function switchTab(element, tabName) {
+            console.log('Switching to tab:', tabName);
+
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             element.classList.add('active');
 
             // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+                console.log('Removed active from:', content.id);
+            });
+
+            const targetTab = document.getElementById(`${tabName}-tab`);
+            targetTab.classList.add('active');
+            console.log('Added active to:', targetTab.id, 'Classes:', targetTab.className);
         }
 
         function renderAllViews(data) {
