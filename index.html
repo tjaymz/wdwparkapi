@@ -235,6 +235,163 @@
             font-size: 0.9em;
             opacity: 0.9;
         }
+
+        .tabs {
+            display: flex;
+            background: #f7f9fc;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: #eef1f5;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .json-explorer {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .json-tree {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .json-key {
+            color: #9cdcfe;
+        }
+
+        .json-string {
+            color: #ce9178;
+        }
+
+        .json-number {
+            color: #b5cea8;
+        }
+
+        .json-boolean {
+            color: #569cd6;
+        }
+
+        .json-null {
+            color: #569cd6;
+        }
+
+        .expandable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .expandable::before {
+            content: '▶ ';
+            display: inline-block;
+            transition: transform 0.2s;
+            color: #888;
+        }
+
+        .expandable.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        .json-content {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .json-content.visible {
+            display: block;
+        }
+
+        .data-summary {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e1e8ed;
+        }
+
+        .data-summary h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .summary-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .summary-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .summary-item span {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .highlight {
+            background: yellow;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -260,12 +417,21 @@
             </div>
         </div>
 
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('preview')">Preview</button>
+            <button class="tab" onclick="switchTab('explorer')">Data Explorer</button>
+            <button class="tab" onclick="switchTab('raw')">Raw JSON</button>
+        </div>
+
         <div class="content">
             <div id="loading" class="loading">
                 Loading park data...
             </div>
             <div id="error" style="display: none;"></div>
-            <div id="data-container" style="display: none;"></div>
+
+            <div id="preview-tab" class="tab-content active" style="display: none;"></div>
+            <div id="explorer-tab" class="tab-content"></div>
+            <div id="raw-tab" class="tab-content"></div>
         </div>
     </div>
 
@@ -295,7 +461,7 @@
                 }
 
                 parkData = await response.json();
-                renderData(parkData);
+                renderAllViews(parkData);
                 showLoading(false);
             } catch (error) {
                 showError(`Failed to load data: ${error.message}`);
@@ -305,7 +471,7 @@
 
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('data-container').style.display = show ? 'none' : 'block';
+            document.getElementById('preview-tab').style.display = show ? 'none' : 'block';
         }
 
         function showError(message) {
@@ -318,8 +484,24 @@
             document.getElementById('error').style.display = 'none';
         }
 
-        function renderData(data) {
-            const container = document.getElementById('data-container');
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function renderAllViews(data) {
+            renderPreview(data);
+            renderExplorer(data);
+            renderRawJSON(data);
+        }
+
+        function renderPreview(data) {
+            const container = document.getElementById('preview-tab');
 
             let html = '';
 
@@ -434,6 +616,149 @@
             }
 
             container.innerHTML = html;
+        }
+
+        function renderExplorer(data) {
+            const container = document.getElementById('explorer-tab');
+
+            let html = '<div class="section">';
+            html += '<h2>Data Structure Overview</h2>';
+
+            // Data Summary
+            html += '<div class="data-summary">';
+            html += '<h3>Top-Level Fields</h3>';
+            html += '<div class="summary-grid">';
+
+            Object.keys(data).forEach(key => {
+                const value = data[key];
+                const type = Array.isArray(value) ? 'array' : typeof value;
+                let info = '';
+
+                if (Array.isArray(value)) {
+                    info = `Array with ${value.length} items`;
+                } else if (typeof value === 'object' && value !== null) {
+                    const subKeys = Object.keys(value).length;
+                    info = `Object with ${subKeys} properties`;
+                } else {
+                    info = `${type}: ${String(value).substring(0, 50)}${String(value).length > 50 ? '...' : ''}`;
+                }
+
+                html += `
+                    <div class="summary-item">
+                        <strong>${key}</strong>
+                        <span>${info}</span>
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+
+            // Detailed breakdown of important sections
+            html += '<div class="data-summary">';
+            html += '<h3>Detailed Data Breakdown</h3>';
+            html += '<div style="line-height: 1.8; color: #555;">';
+
+            // Meta information
+            if (data.meta) {
+                html += '<p><strong>meta:</strong> Contains page metadata (title, description, keywords)</p>';
+                html += `<p style="margin-left: 20px;">- title: "${data.meta.title}"</p>`;
+                html += `<p style="margin-left: 20px;">- description: ${data.meta.description ? data.meta.description.substring(0, 100) + '...' : 'N/A'}</p>`;
+            }
+
+            // Header data
+            if (data.headerData) {
+                html += '<p><strong>headerData:</strong> Page header information</p>';
+                Object.keys(data.headerData).forEach(key => {
+                    html += `<p style="margin-left: 20px;">- ${key}: ${JSON.stringify(data.headerData[key]).substring(0, 80)}</p>`;
+                });
+            }
+
+            // Info bar data (schedule)
+            if (data.infoBarData) {
+                html += '<p><strong>infoBarData:</strong> Information bar data including schedules</p>';
+                if (data.infoBarData.schedule) {
+                    html += `<p style="margin-left: 20px;">- schedule: ${data.infoBarData.schedule.schedules?.length || 0} schedule entries</p>`;
+                    html += `<p style="margin-left: 20px;">- timezone: ${data.infoBarData.schedule.timeZone}</p>`;
+                }
+            }
+
+            // Map data (attractions)
+            if (data.mapData?.location?.markers) {
+                html += '<p><strong>mapData.location.markers:</strong> Attraction markers for map</p>';
+                html += `<p style="margin-left: 20px;">- Total attractions: ${data.mapData.location.markers.length}</p>`;
+                const marker = data.mapData.location.markers[0];
+                if (marker) {
+                    html += '<p style="margin-left: 20px;">- Each marker contains:</p>';
+                    Object.keys(marker).forEach(key => {
+                        html += `<p style="margin-left: 40px;">• ${key} (${typeof marker[key]})</p>`;
+                    });
+                }
+            }
+
+            // Hero data
+            if (data.heroData) {
+                html += '<p><strong>heroData:</strong> Hero section media and content</p>';
+                if (data.heroData.mediaEngine?.data) {
+                    html += `<p style="margin-left: 20px;">- ${data.heroData.mediaEngine.data.length} media items (videos/images)</p>`;
+                }
+            }
+
+            html += '</div></div>';
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function renderRawJSON(data) {
+            const container = document.getElementById('raw-tab');
+
+            let html = '<div class="section">';
+            html += '<h2>Raw JSON Data</h2>';
+            html += '<input type="text" class="search-box" placeholder="Search JSON (press Enter)" onkeyup="searchJSON(event)">';
+            html += '<div class="json-tree" id="json-display">';
+            html += syntaxHighlight(JSON.stringify(data, null, 2));
+            html += '</div></div>';
+
+            container.innerHTML = html;
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function searchJSON(event) {
+            if (event.key !== 'Enter') return;
+
+            const searchTerm = event.target.value.toLowerCase();
+            const jsonDisplay = document.getElementById('json-display');
+
+            if (!searchTerm) {
+                jsonDisplay.innerHTML = syntaxHighlight(JSON.stringify(parkData, null, 2));
+                return;
+            }
+
+            const jsonString = JSON.stringify(parkData, null, 2);
+            const highlighted = jsonString.replace(
+                new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+                match => `<mark class="highlight">${match}</mark>`
+            );
+
+            jsonDisplay.innerHTML = syntaxHighlight(highlighted);
         }
 
         function formatDate(dateString) {
